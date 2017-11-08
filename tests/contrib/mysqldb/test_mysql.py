@@ -17,8 +17,13 @@ class MySQLCore(object):
     TEST_SERVICE = 'test-mysql'
 
     def tearDown(self):
-        if self.conn and self.conn.is_connected():
-            self.conn.close()
+        if self.conn:
+            try:
+                self.conn.ping()
+            except MySQLdb.InterfaceError:
+                pass
+            else:
+                self.conn.close()
         unpatch()
 
     def _get_conn_tracer(self):
@@ -150,7 +155,7 @@ class TestMysqlPatch(MySQLCore):
         if not self.conn:
             tracer = get_dummy_tracer()
             self.conn = MySQLdb.Connect(**MYSQL_CONFIG)
-            assert self.conn.is_connected()
+            self.conn.ping()
             # Ensure that the default pin is there, with its default value
             pin = Pin.get_from(self.conn)
             assert pin
