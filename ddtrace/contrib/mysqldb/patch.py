@@ -10,7 +10,6 @@ from ...ext import net, db
 
 KWPOS_BY_TAG = {
     net.TARGET_HOST: ('host', 0),
-    net.TARGET_PORT: ('port', 4),
     db.USER: ('user', 1),
     db.NAME: ('db', 3),
 }
@@ -39,6 +38,7 @@ def patch_conn(conn, *args, **kwargs):
     tags = {t: kwargs[k] if k in kwargs else args[p]
             for t, (k, p) in KWPOS_BY_TAG.items()
             if k in kwargs or len(args) > p}
+    tags[net.TARGET_PORT] = conn.port
     pin = Pin(service="mysql", app="mysql", app_type="db", tags=tags)
 
     # grab the metadata from the conn
