@@ -54,6 +54,30 @@ class MySQLCore(object):
         })
         # eq_(span.get_metric('sql.rows'), -1)
 
+    def test_simple_query_with_positional_args(self):
+        conn, tracer = self._get_conn_tracer_with_positional_args()
+        writer = tracer.writer
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        rows = cursor.fetchall()
+        eq_(len(rows), 1)
+        spans = writer.pop()
+        eq_(len(spans), 1)
+
+        span = spans[0]
+        eq_(span.service, self.TEST_SERVICE)
+        eq_(span.name, 'mysql.query')
+        eq_(span.span_type, 'sql')
+        eq_(span.error, 0)
+        assert_dict_issuperset(span.meta, {
+            'out.host': u'127.0.0.1',
+            'out.port': u'53306',
+            'db.name': u'test',
+            'db.user': u'test',
+            'sql.query': u'SELECT 1',
+        })
+        # eq_(span.get_metric('sql.rows'), -1)
+
     def test_query_with_several_rows(self):
         conn, tracer = self._get_conn_tracer()
         writer = tracer.writer
@@ -155,6 +179,26 @@ class TestMysqlPatch(MySQLCore):
         if not self.conn:
             tracer = get_dummy_tracer()
             self.conn = MySQLdb.Connect(**MYSQL_CONFIG)
+            self.conn.ping()
+            # Ensure that the default pin is there, with its default value
+            pin = Pin.get_from(self.conn)
+            assert pin
+            assert pin.service == 'mysql'
+            # Customize the service
+            # we have to apply it on the existing one since new one won't inherit `app`
+            pin.clone(
+                service=self.TEST_SERVICE, tracer=tracer).onto(self.conn)
+
+            return self.conn, tracer
+
+    def _get_conn_tracer_with_positional_args(self):
+        if not self.conn:
+            tracer = get_dummy_tracer()
+            self.conn = MySQLdb.Connect(MYSQL_CONFIG['host'],
+                                        MYSQL_CONFIG['user'],
+                                        MYSQL_CONFIG['password'],
+                                        MYSQL_CONFIG['db'],
+                                        MYSQL_CONFIG['port'])
             self.conn.ping()
             # Ensure that the default pin is there, with its default value
             pin = Pin.get_from(self.conn)
