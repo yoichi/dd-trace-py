@@ -175,15 +175,18 @@ class TestMysqlPatch(MySQLCore):
         unpatch()
         MySQLCore.tearDown(self)
 
+    def _connect_with_kwargs(self):
+        return MySQLdb.Connect(**{
+            'host': MYSQL_CONFIG['host'],
+            'user': MYSQL_CONFIG['user'],
+            'password': MYSQL_CONFIG['password'],
+            'db': MYSQL_CONFIG['database'],
+            'port': MYSQL_CONFIG['port']})
+
     def _get_conn_tracer(self):
         if not self.conn:
             tracer = get_dummy_tracer()
-            self.conn = MySQLdb.Connect(**{
-                'host': MYSQL_CONFIG['host'],
-                'user': MYSQL_CONFIG['user'],
-                'password': MYSQL_CONFIG['password'],
-                'db': MYSQL_CONFIG['database'],
-                'port': MYSQL_CONFIG['port']})
+            self.conn = self._connect_with_kwargs()
             self.conn.ping()
             # Ensure that the default pin is there, with its default value
             pin = Pin.get_from(self.conn)
@@ -219,7 +222,7 @@ class TestMysqlPatch(MySQLCore):
     def test_patch_unpatch(self):
         unpatch()
         # assert we start unpatched
-        conn = MySQLdb.Connect(**MYSQL_CONFIG)
+        conn = self._connect_with_kwargs()
         assert not Pin.get_from(conn)
         conn.close()
 
@@ -227,7 +230,7 @@ class TestMysqlPatch(MySQLCore):
         try:
             tracer = get_dummy_tracer()
             writer = tracer.writer
-            conn = MySQLdb.Connect(**MYSQL_CONFIG)
+            conn = self._connect_with_kwargs()
             pin = Pin.get_from(conn)
             assert pin
             pin.clone(
@@ -258,7 +261,7 @@ class TestMysqlPatch(MySQLCore):
             unpatch()
 
             # assert we finish unpatched
-            conn = MySQLdb.Connect(**MYSQL_CONFIG)
+            conn = self._connect_with_kwargs()
             assert not Pin.get_from(conn)
             conn.close()
 
