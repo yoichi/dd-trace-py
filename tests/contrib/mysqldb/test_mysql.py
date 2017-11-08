@@ -197,7 +197,7 @@ class TestMysqlPatch(MySQLCore):
             self.conn = MySQLdb.Connect(MYSQL_CONFIG['host'],
                                         MYSQL_CONFIG['user'],
                                         MYSQL_CONFIG['password'],
-                                        MYSQL_CONFIG['db'],
+                                        MYSQL_CONFIG['database'],
                                         MYSQL_CONFIG['port'])
             self.conn.ping()
             # Ensure that the default pin is there, with its default value
