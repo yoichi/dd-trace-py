@@ -179,7 +179,7 @@ class TestMysqlPatch(MySQLCore):
         return MySQLdb.Connect(**{
             'host': MYSQL_CONFIG['host'],
             'user': MYSQL_CONFIG['user'],
-            'password': MYSQL_CONFIG['password'],
+            'passwd': MYSQL_CONFIG['password'],
             'db': MYSQL_CONFIG['database'],
             'port': MYSQL_CONFIG['port']})
 
