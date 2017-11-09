@@ -235,7 +235,7 @@ class TestMysqlPatch(MySQLCore):
             assert pin
             pin.clone(
                 service=self.TEST_SERVICE, tracer=tracer).onto(conn)
-            self.conn.ping()
+            conn.ping()
 
             cursor = conn.cursor()
             cursor.execute("SELECT 1")
