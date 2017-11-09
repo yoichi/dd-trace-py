@@ -3,7 +3,7 @@ import wrapt
 import MySQLdb
 
 # project
-from ddtrace import Pin
+from ddtrace import Pin, tracer
 from ddtrace.contrib.dbapi import TracedConnection
 from ...ext import net, db
 
@@ -30,15 +30,17 @@ def unpatch():
         if hasattr(MySQLdb, 'connect'):
             MySQLdb.connect = MySQLdb.Connect
 
+@tracer.wrap(service="mysql")
 def _connect(func, instance, args, kwargs):
     conn = func(*args, **kwargs)
-    return patch_conn(conn, *args, **kwargs)
-
-def patch_conn(conn, *args, **kwargs):
     tags = {t: kwargs[k] if k in kwargs else args[p]
             for t, (k, p) in KWPOS_BY_TAG.items()
             if k in kwargs or len(args) > p}
     tags[net.TARGET_PORT] = conn.port
+    tracer.current_span().set_tags(tags)
+    return patch_conn(conn, tags)
+
+def patch_conn(conn, tags):
     pin = Pin(service="mysql", app="mysql", app_type="db", tags=tags)
 
     # grab the metadata from the conn
