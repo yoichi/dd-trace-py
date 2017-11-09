@@ -143,7 +143,10 @@ class MySQLCore(object):
         data = (40, 2, None)
         output = cursor.callproc(proc, data)
         eq_(len(output), 3)
-        eq_(output[2], 42)
+        # resulted p3 isn't stored on output[2], we need to fetch it with select
+        # http://mysqlclient.readthedocs.io/user_guide.html#cursor-objects
+        cursor.execute("SELECT @_sp_sum_2;")
+        eq_(cursor.fetchone()[0], 42)
 
         spans = writer.pop()
         assert spans, spans
