@@ -153,8 +153,8 @@ class MySQLCore(object):
 
         # number of spans depends on MySQL implementation details,
         # typically, internal calls to execute, but at least we
-        # can expect the last closed span to be our proc.
-        span = spans[len(spans) - 1]
+        # can expect the next to the last closed span to be our proc.
+        span = spans[-2]
         eq_(span.service, self.TEST_SERVICE)
         eq_(span.name, 'mysql.query')
         eq_(span.span_type, 'sql')
